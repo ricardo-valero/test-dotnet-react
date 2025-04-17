@@ -54,13 +54,9 @@ todoGroup.MapPut("/{id}", async (int id, Todo inputTodo, AppDb db) =>
 {
     var todo = await db.Todos.FindAsync(id);
     if (todo is null) return Results.NotFound();
-    foreach (PropertyInfo property in typeof(Todo).GetProperties())
-    {
-        if (property.CanWrite)
-        {
-            property.SetValue(todo, property.GetValue(inputTodo));
-        }
-    }
+    todo.Status = inputTodo.Status;
+    todo.Description = inputTodo.Description;
+    todo.Title = inputTodo.Title;
     // TODO: 
     await db.SaveChangesAsync();
     return Results.NoContent();
