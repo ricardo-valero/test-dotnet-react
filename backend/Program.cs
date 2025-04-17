@@ -1,5 +1,5 @@
-using System.Reflection;
 using backend.Models;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,27 +29,28 @@ app.UseAuthorization();
 
 app.MapGet("/", () => "Hello World!");
 
+var todoGroup = app.MapGroup("/todo");
 
-app.MapGet("/todo", async (AppDb db) =>
+todoGroup.MapGet("/", async (AppDb db) =>
     await db.Todos.ToListAsync());
 
-app.MapGet("/todo/complete", async (AppDb db) =>
+todoGroup.MapGet("/complete", async (AppDb db) =>
     await db.Todos.Where(t => t.Status.Equals("Complete")).ToListAsync());
 
-app.MapGet("/todo/{id}", async (int id, AppDb db) =>
+todoGroup.MapGet("/{id}", async (int id, AppDb db) =>
     await db.Todos.FindAsync(id)
         is Todo todo
             ? Results.Ok(todo)
             : Results.NotFound());
 
-app.MapPost("/todo", async (Todo todo, AppDb db) =>
+todoGroup.MapPost("/", async (Todo todo, AppDb db) =>
 {
     db.Todos.Add(todo);
     await db.SaveChangesAsync();
     return Results.Created($"/todo/{todo.Id}", todo);
 });
 
-app.MapPut("/todo/{id}", async (int id, Todo inputTodo, AppDb db) =>
+todoGroup.MapPut("/{id}", async (int id, Todo inputTodo, AppDb db) =>
 {
     var todo = await db.Todos.FindAsync(id);
     if (todo is null) return Results.NotFound();
@@ -60,11 +61,12 @@ app.MapPut("/todo/{id}", async (int id, Todo inputTodo, AppDb db) =>
             property.SetValue(todo, property.GetValue(inputTodo));
         }
     }
+    // TODO: 
     await db.SaveChangesAsync();
     return Results.NoContent();
 });
 
-app.MapDelete("/todo/{id}", async (int id, AppDb db) =>
+todoGroup.MapDelete("/{id}", async (int id, AppDb db) =>
 {
     if (await db.Todos.FindAsync(id) is Todo todo)
     {
