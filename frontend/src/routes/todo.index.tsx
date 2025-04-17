@@ -3,17 +3,8 @@ import {
   createFileRoute,
   useRouter,
 } from "@tanstack/react-router";
-import {
-  useQueryErrorResetBoundary,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import {
-  createTodo,
-  FormSchema,
-  TodoNotFoundError,
-  todoQueryOptions,
-  updateTodo,
-} from "@/todos";
+import { useQueryErrorResetBoundary } from "@tanstack/react-query";
+import { createTodo, FormSchema, TodoNotFoundError } from "@/todo";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Input } from "@/components/ui/input";
@@ -96,7 +87,7 @@ export function TodoComponent() {
                 <FormLabel>Title</FormLabel>
                 <Input
                   onChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value}
                   placeholder="Title"
                 />
                 <FormMessage />
@@ -111,7 +102,7 @@ export function TodoComponent() {
                 <FormLabel>Description</FormLabel>
                 <Input
                   onChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value}
                   placeholder="Title"
                 />
                 <FormMessage />
@@ -125,10 +116,7 @@ export function TodoComponent() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Status</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a status" />
