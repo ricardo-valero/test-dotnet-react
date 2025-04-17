@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddOpenApi();
+builder.Services.AddOpenApiDocument();
+
 var conString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDb>(options => options.UseSqlite(conString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -13,6 +16,12 @@ builder.Services.AddAuthentication().AddJwtBearer();
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseOpenApi();
+    app.UseSwaggerUi();
+}
 
 app.UseCors();
 app.UseAuthentication();
