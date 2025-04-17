@@ -11,15 +11,24 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as TodoImport } from './routes/todo'
 import { Route as LoginImport } from './routes/login'
 import { Route as AuthImport } from './routes/_auth'
 import { Route as IndexImport } from './routes/index'
+import { Route as TodoIndexImport } from './routes/todo.index'
+import { Route as TodoTodoIdImport } from './routes/todo.$todoId'
 import { Route as AuthInvoicesImport } from './routes/_auth.invoices'
 import { Route as AuthDashboardImport } from './routes/_auth.dashboard'
 import { Route as AuthInvoicesIndexImport } from './routes/_auth.invoices.index'
 import { Route as AuthInvoicesInvoiceIdImport } from './routes/_auth.invoices.$invoiceId'
 
 // Create/Update Routes
+
+const TodoRoute = TodoImport.update({
+  id: '/todo',
+  path: '/todo',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const LoginRoute = LoginImport.update({
   id: '/login',
@@ -36,6 +45,18 @@ const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const TodoIndexRoute = TodoIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TodoRoute,
+} as any)
+
+const TodoTodoIdRoute = TodoTodoIdImport.update({
+  id: '/$todoId',
+  path: '/$todoId',
+  getParentRoute: () => TodoRoute,
 } as any)
 
 const AuthInvoicesRoute = AuthInvoicesImport.update({
@@ -87,6 +108,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
     }
+    '/todo': {
+      id: '/todo'
+      path: '/todo'
+      fullPath: '/todo'
+      preLoaderRoute: typeof TodoImport
+      parentRoute: typeof rootRoute
+    }
     '/_auth/dashboard': {
       id: '/_auth/dashboard'
       path: '/dashboard'
@@ -100,6 +128,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/invoices'
       preLoaderRoute: typeof AuthInvoicesImport
       parentRoute: typeof AuthImport
+    }
+    '/todo/$todoId': {
+      id: '/todo/$todoId'
+      path: '/$todoId'
+      fullPath: '/todo/$todoId'
+      preLoaderRoute: typeof TodoTodoIdImport
+      parentRoute: typeof TodoImport
+    }
+    '/todo/': {
+      id: '/todo/'
+      path: '/'
+      fullPath: '/todo/'
+      preLoaderRoute: typeof TodoIndexImport
+      parentRoute: typeof TodoImport
     }
     '/_auth/invoices/$invoiceId': {
       id: '/_auth/invoices/$invoiceId'
@@ -146,12 +188,27 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
+interface TodoRouteChildren {
+  TodoTodoIdRoute: typeof TodoTodoIdRoute
+  TodoIndexRoute: typeof TodoIndexRoute
+}
+
+const TodoRouteChildren: TodoRouteChildren = {
+  TodoTodoIdRoute: TodoTodoIdRoute,
+  TodoIndexRoute: TodoIndexRoute,
+}
+
+const TodoRouteWithChildren = TodoRoute._addFileChildren(TodoRouteChildren)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
+  '/todo': typeof TodoRouteWithChildren
   '/dashboard': typeof AuthDashboardRoute
   '/invoices': typeof AuthInvoicesRouteWithChildren
+  '/todo/$todoId': typeof TodoTodoIdRoute
+  '/todo/': typeof TodoIndexRoute
   '/invoices/$invoiceId': typeof AuthInvoicesInvoiceIdRoute
   '/invoices/': typeof AuthInvoicesIndexRoute
 }
@@ -161,6 +218,8 @@ export interface FileRoutesByTo {
   '': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
   '/dashboard': typeof AuthDashboardRoute
+  '/todo/$todoId': typeof TodoTodoIdRoute
+  '/todo': typeof TodoIndexRoute
   '/invoices/$invoiceId': typeof AuthInvoicesInvoiceIdRoute
   '/invoices': typeof AuthInvoicesIndexRoute
 }
@@ -170,8 +229,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
+  '/todo': typeof TodoRouteWithChildren
   '/_auth/dashboard': typeof AuthDashboardRoute
   '/_auth/invoices': typeof AuthInvoicesRouteWithChildren
+  '/todo/$todoId': typeof TodoTodoIdRoute
+  '/todo/': typeof TodoIndexRoute
   '/_auth/invoices/$invoiceId': typeof AuthInvoicesInvoiceIdRoute
   '/_auth/invoices/': typeof AuthInvoicesIndexRoute
 }
@@ -182,19 +244,33 @@ export interface FileRouteTypes {
     | '/'
     | ''
     | '/login'
+    | '/todo'
     | '/dashboard'
     | '/invoices'
+    | '/todo/$todoId'
+    | '/todo/'
     | '/invoices/$invoiceId'
     | '/invoices/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '' | '/login' | '/dashboard' | '/invoices/$invoiceId' | '/invoices'
+  to:
+    | '/'
+    | ''
+    | '/login'
+    | '/dashboard'
+    | '/todo/$todoId'
+    | '/todo'
+    | '/invoices/$invoiceId'
+    | '/invoices'
   id:
     | '__root__'
     | '/'
     | '/_auth'
     | '/login'
+    | '/todo'
     | '/_auth/dashboard'
     | '/_auth/invoices'
+    | '/todo/$todoId'
+    | '/todo/'
     | '/_auth/invoices/$invoiceId'
     | '/_auth/invoices/'
   fileRoutesById: FileRoutesById
@@ -204,12 +280,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRouteWithChildren
   LoginRoute: typeof LoginRoute
+  TodoRoute: typeof TodoRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
   LoginRoute: LoginRoute,
+  TodoRoute: TodoRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -224,7 +302,8 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/_auth",
-        "/login"
+        "/login",
+        "/todo"
       ]
     },
     "/": {
@@ -240,6 +319,13 @@ export const routeTree = rootRoute
     "/login": {
       "filePath": "login.tsx"
     },
+    "/todo": {
+      "filePath": "todo.tsx",
+      "children": [
+        "/todo/$todoId",
+        "/todo/"
+      ]
+    },
     "/_auth/dashboard": {
       "filePath": "_auth.dashboard.tsx",
       "parent": "/_auth"
@@ -251,6 +337,14 @@ export const routeTree = rootRoute
         "/_auth/invoices/$invoiceId",
         "/_auth/invoices/"
       ]
+    },
+    "/todo/$todoId": {
+      "filePath": "todo.$todoId.tsx",
+      "parent": "/todo"
+    },
+    "/todo/": {
+      "filePath": "todo.index.tsx",
+      "parent": "/todo"
     },
     "/_auth/invoices/$invoiceId": {
       "filePath": "_auth.invoices.$invoiceId.tsx",
