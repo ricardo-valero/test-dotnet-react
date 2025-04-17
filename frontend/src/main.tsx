@@ -1,42 +1,37 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { RouterProvider, createRouter } from '@tanstack/react-router'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { routeTree } from "./routeTree.gen";
+import { AuthProvider, useAuth } from "./auth";
+import reportWebVitals from "./reportWebVitals.ts";
+import "./styles.css";
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+export const queryClient = new QueryClient();
 
-import { routeTree } from './routeTree.gen'
-import { AuthProvider, useAuth } from './auth'
-import reportWebVitals from './reportWebVitals.ts'
-import './styles.css'
-
-const queryClient = new QueryClient();
-
-// Set up a Router instance
 const router = createRouter({
   routeTree,
-  defaultPreload: 'intent',
+  defaultPreload: "intent",
   scrollRestoration: true,
   context: {
     queryClient,
-    auth: undefined!, // This will be set after we wrap the app in an AuthProvider
+    auth: undefined!,
   },
-})
+});
 
-// Register things for typesafety
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface Register {
-    router: typeof router
+    router: typeof router;
   }
 }
 
 function InnerApp() {
-  const auth = useAuth()
+  const auth = useAuth();
   return (
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} context={{ auth }} />
     </QueryClientProvider>
-  )
-
+  );
 }
 
 function App() {
@@ -44,21 +39,21 @@ function App() {
     <AuthProvider>
       <InnerApp />
     </AuthProvider>
-  )
+  );
 }
 
-const rootElement = document.getElementById('app')!
+const rootElement = document.getElementById("app")!;
 
 if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement)
+  const root = ReactDOM.createRoot(rootElement);
   root.render(
     <React.StrictMode>
       <App />
     </React.StrictMode>,
-  )
+  );
 }
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals()
+reportWebVitals();

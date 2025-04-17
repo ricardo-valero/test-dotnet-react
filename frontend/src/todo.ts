@@ -3,103 +3,77 @@ import { API_BASE_URL } from "./config";
 import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 
-export type Todo = {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  expiredAt: string;
-};
+export type Todo = { id: string } & z.TypeOf<typeof FormSchema>;
+
+export const FormSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional(),
+  status: z.string(),
+  expiredAt: z.date(),
+});
 
 export class TodoNotFoundError extends Error {}
 
-export const fetchTodo = async (todoId: string) => {
-  console.info(`Fetching todo with id ${todoId}...`);
-  await new Promise((r) => setTimeout(r, 500));
-  const todo = await axios
-    .get<Todo>(`${API_BASE_URL}/todo/${todoId}`)
+export const single = async (id: string) => {
+  console.info(`Fetching todo with id ${id}...`);
+  return axios
+    .get<Todo>(`${API_BASE_URL}/todo/${id}`)
     .then((r) => r.data)
     .catch((err) => {
       if (err.status === 404) {
-        throw new TodoNotFoundError(`Todo with id "${todoId}" not found!`);
+        throw new TodoNotFoundError(`Todo with id "${id}" not found!`);
       }
       throw err;
     });
-
-  return todo;
 };
 
-export const fetchTodos = async () => {
+export const list = async () => {
   console.info("Fetching todos...");
-  await new Promise((r) => setTimeout(r, 500));
-  return axios.get<Array<Todo>>(`${API_BASE_URL}/todo`).then((r) => r.data);
-};
-
-export const FormSchema = z.object({
-  title: z
-    .string({
-      required_error: "Title is required",
-    })
-    .min(1, "Title is required"),
-
-  description: z
-    .string({
-      required_error: "Description is required",
-    })
-    .min(1, "Description is required"),
-
-  status: z.string({
-    required_error: "Please select a status",
-  }),
-
-  // expiredAt: z
-  //   .string({
-  //     required_error: "Expiration date is required",
-  //   })
-  //   .refine(
-  //     (val) => {
-  //       return !isNaN(Date.parse(val));
-  //     },
-  //     {
-  //       message: "Invalid date format",
-  //     },
-  //   ),
-});
-
-export const updateTodo = async (
-  todoId: string,
-  updatedTodo: Partial<Todo>,
-) => {
-  console.info(`Updating todo with id ${todoId}...`);
-  const response = await axios
-    .put<Todo>(`${API_BASE_URL}/todo/${todoId}`, updatedTodo)
+  return axios
+    .get<Array<Todo>>(`${API_BASE_URL}/todo`)
     .then((r) => r.data)
     .catch((err) => {
-      throw new Error(`Failed to update todo: ${err.message}`);
+      throw new Error(`Failed to fetch todos: ${err.message}`);
     });
-
-  return response;
 };
 
-export const createTodo = async (todo: Partial<Todo>) => {
+export const create = async (todo: Partial<Todo>) => {
   console.info(`Creating todo...`);
-  const response = await axios
+  return axios
     .post<Todo>(`${API_BASE_URL}/todo`, todo)
     .then((r) => r.data)
     .catch((err) => {
+      throw new Error(`Failed to create todo: ${err.message}`);
+    });
+};
+
+export const update = async (id: string, partial: Partial<Todo>) => {
+  console.info(`Updating todo with id ${id}...`);
+  return axios
+    .put<Todo>(`${API_BASE_URL}/todo/${id}`, partial)
+    .then((r) => r.data)
+    .catch((err) => {
       throw new Error(`Failed to update todo: ${err.message}`);
     });
+};
 
-  return response;
+export const remove = async (id: string) => {
+  console.info(`Removing todo with id ${id}...`);
+  return axios
+    .delete<Todo>(`${API_BASE_URL}/todo/${id}`)
+    .then((r) => r.data)
+    .catch((err) => {
+      throw new Error(`Failed to remove todo: ${err.message}`);
+    });
 };
 
 export const todoQueryOptions = (todoId: string) =>
   queryOptions({
     queryKey: ["todos", { todoId }],
-    queryFn: () => fetchTodo(todoId),
+    queryFn: () => single(todoId),
   });
 
 export const todosQueryOptions = queryOptions({
   queryKey: ["todos"],
-  queryFn: () => fetchTodos(),
+  queryFn: () => list(),
 });

@@ -7,11 +7,12 @@ import {
   useQueryErrorResetBoundary,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { format } from "date-fns";
 import {
   FormSchema,
   TodoNotFoundError,
   todoQueryOptions,
-  updateTodo,
+  update,
 } from "@/todo";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect } from "react";
@@ -35,10 +36,18 @@ import {
   FormMessage,
   FormControl,
 } from "@/components/ui/form";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
 
-export const Route = createFileRoute("/todo/$todoId")({
-  loader: ({ context: { queryClient }, params: { todoId } }) => {
-    return queryClient.ensureQueryData(todoQueryOptions(todoId));
+export const Route = createFileRoute("/todo/$id")({
+  loader: ({ context: { queryClient }, params: { id } }) => {
+    return queryClient.ensureQueryData(todoQueryOptions(id));
   },
   errorComponent: TodoErrorComponent,
   component: TodoComponent,
@@ -70,28 +79,28 @@ export function TodoErrorComponent({ error }: ErrorComponentProps) {
 }
 
 export function TodoComponent() {
-  const todoId = Route.useParams().todoId;
-  const { data: todo } = useSuspenseQuery(todoQueryOptions(todoId));
+  const { id } = Route.useParams();
+  const { data } = useSuspenseQuery(todoQueryOptions(id));
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-    defaultValues: todo,
+    defaultValues: data,
   });
 
   useEffect(() => {
-    form.reset(todo);
-  }, [todo, form]);
+    form.reset(data);
+  }, [data, form]);
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    updateTodo(todoId, data);
+    update(id, data);
     console.log({ data });
   }
 
   return (
     <div className="space-y-2">
-      <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+      <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">
         Edit Todo
-      </h1>
+      </h2>
 
       <Form {...form}>
         <form
@@ -107,7 +116,7 @@ export function TodoComponent() {
                 <Input
                   onChange={field.onChange}
                   value={field.value}
-                  placeholder="Title"
+                  placeholder="Enter a title"
                 />
                 <FormMessage />
               </FormItem>
@@ -122,13 +131,12 @@ export function TodoComponent() {
                 <Input
                   onChange={field.onChange}
                   value={field.value}
-                  placeholder="Title"
+                  placeholder="Enter a description"
                 />
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="status"
@@ -147,6 +155,47 @@ export function TodoComponent() {
                     <SelectItem value="in progress">In Progress</SelectItem>
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="expiredAt"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Expires</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-[240px] pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground",
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
                 <FormMessage />
               </FormItem>
             )}

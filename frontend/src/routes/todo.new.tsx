@@ -4,7 +4,7 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import { useQueryErrorResetBoundary } from "@tanstack/react-query";
-import { createTodo, FormSchema, TodoNotFoundError } from "@/todo";
+import { create, FormSchema, TodoNotFoundError } from "@/todo";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Input } from "@/components/ui/input";
@@ -27,8 +27,17 @@ import {
   FormMessage,
   FormControl,
 } from "@/components/ui/form";
+import { cn } from "@/lib/utils";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
 
-export const Route = createFileRoute("/todo/")({
+export const Route = createFileRoute("/todo/new")({
   errorComponent: TodoErrorComponent,
   component: TodoComponent,
 });
@@ -64,15 +73,15 @@ export function TodoComponent() {
   });
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    createTodo(data);
+    create(data);
     console.log({ data });
   }
 
   return (
     <div className="space-y-2">
-      <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+      <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">
         New Todo
-      </h1>
+      </h2>
 
       <Form {...form}>
         <form
@@ -109,7 +118,6 @@ export function TodoComponent() {
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="status"
@@ -128,6 +136,47 @@ export function TodoComponent() {
                     <SelectItem value="in progress">In Progress</SelectItem>
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="expiredAt"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Expires</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-[240px] pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground",
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
                 <FormMessage />
               </FormItem>
             )}

@@ -10,7 +10,12 @@ import {
   useRouter,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { TodoNotFoundError, todosQueryOptions, type Todo } from "@/todo";
+import {
+  remove,
+  TodoNotFoundError,
+  todosQueryOptions,
+  type Todo,
+} from "@/todo";
 import { useEffect } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
@@ -38,13 +43,7 @@ export function TodoErrorComponent({ error }: ErrorComponentProps) {
 
   return (
     <div>
-      <button
-        onClick={() => {
-          router.invalidate();
-        }}
-      >
-        retry
-      </button>
+      <Button onClick={() => router.invalidate()}>retry</Button>
       <ErrorComponent error={error} />
     </div>
   );
@@ -101,32 +100,30 @@ export const columns: ColumnDef<Todo>[] = [
     cell: ({ row }) => {
       const todo = row.original;
       return (
-        <Link
-          to="/todo/$todoId"
-          params={{ todoId: todo.id }}
-          className="text-blue-600 hover:opacity-75"
-          activeProps={{ className: "font-bold underline" }}
-        >
-          <Button>Edit</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link to="/todo/$id" params={{ id: todo.id }}>
+            <Button>Edit</Button>
+          </Link>
+          <Button onClick={() => remove(todo.id)}>Remove</Button>
+        </div>
       );
     },
   },
 ];
 
 export function TodoComponent() {
-  const { data: todos } = useSuspenseQuery(todosQueryOptions);
+  const { data } = useSuspenseQuery(todosQueryOptions);
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Todo List</h1>
-      <Link
-        to="/todo"
-        className="text-blue-600 hover:opacity-75"
-        activeProps={{ className: "font-bold underline" }}
-      >
-        <Button variant="outline">New</Button>
-      </Link>
-      <DataTable columns={columns} data={todos} />
+      <div className="flex justify-between gap-1">
+        <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+          Todos
+        </h1>
+        <Link to="/todo/new">
+          <Button size="lg">New</Button>
+        </Link>
+      </div>
+      <DataTable columns={columns} data={data} />
       <Outlet />
     </div>
   );

@@ -57,7 +57,8 @@ todoGroup.MapPut("/{id}", async (int id, Todo inputTodo, AppDb db) =>
     todo.Status = inputTodo.Status;
     todo.Description = inputTodo.Description;
     todo.Title = inputTodo.Title;
-    // TODO: 
+    todo.ExpiredAt = inputTodo.ExpiredAt;
+    // TODO:
     await db.SaveChangesAsync();
     return Results.NoContent();
 });
