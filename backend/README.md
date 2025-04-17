@@ -8,3 +8,9 @@ dotnet add package Microsoft.VisualStudio.Web.CodeGeneration.Design
 dotnet add package Microsoft.EntityFrameworkCore.Sqlite
 dotnet add package Microsoft.EntityFrameworkCore.Tools
 ```
+
+
+```bash
+dotnet ef migrations add Initial
+ > dotnet ef database update 
+```

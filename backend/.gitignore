@@ -1,3 +1,8 @@
 # C#
 bin/
 obj/
+
+# SQLite
+local.db
+local.db-shm
+local.db-wal
