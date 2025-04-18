@@ -10,6 +10,7 @@ import {
 import { format } from "date-fns";
 import {
   FormSchema,
+  statusList,
   TodoNotFoundError,
   todoQueryOptions,
   useUpdate,
@@ -42,7 +43,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { CalendarIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  CircleCheck,
+  CircleDashed,
+  CircleDot,
+} from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 
 export const Route = createFileRoute("/todo/$id")({
@@ -154,9 +160,23 @@ export function TodoComponent() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="complete">Complete</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="in progress">In Progress</SelectItem>
+                    {statusList.options.map((option) =>
+                      option === "pending" ? (
+                        <SelectItem value={option}>
+                          <CircleDot className="text-yellow-600" /> {option}
+                        </SelectItem>
+                      ) : option === "in-progress" ? (
+                        <SelectItem value={option}>
+                          <CircleDashed className="text-blue-600" /> {option}
+                        </SelectItem>
+                      ) : option === "complete" ? (
+                        <SelectItem value={option}>
+                          <CircleCheck className="text-green-600" /> {option}
+                        </SelectItem>
+                      ) : (
+                        <SelectItem value={option}>{option}</SelectItem>
+                      ),
+                    )}
                   </SelectContent>
                 </Select>
                 <FormMessage />

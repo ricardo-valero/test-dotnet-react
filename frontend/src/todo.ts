@@ -3,12 +3,25 @@ import { API_BASE_URL } from "./config";
 import { QueryClient, queryOptions, useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 
-export type Todo = { id: string } & z.TypeOf<typeof FormSchema>;
+const TodoSchema = z.object({
+  id: z
+    .number()
+    .int()
+    .transform((int) => `${int}`),
+  title: z.string().min(1),
+  description: z.string().optional(),
+  status: z.string().transform((str) => statusList.parse(str)),
+  expiredAt: z.string().transform((str) => new Date(str)),
+});
+
+export type Todo = z.infer<typeof TodoSchema>;
+
+export const statusList = z.enum(["pending", "in-progress", "complete"]);
 
 export const FormSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
-  status: z.string(),
+  status: statusList,
   expiredAt: z.date(),
 });
 
@@ -27,12 +40,16 @@ const single = async (id: string) => {
     });
 };
 
-const list = async () => {
+const list = async (): Promise<Todo[]> => {
   console.info("Fetching todos...");
   return axios
-    .get<Array<Todo>>(`${API_BASE_URL}/todo`)
-    .then((r) => r.data)
+    .get(`${API_BASE_URL}/todo`) // Mark as unknown since we'll validate
+    .then((r) => z.array(TodoSchema).parse(r.data))
     .catch((err) => {
+      if (err instanceof z.ZodError) {
+        console.error("Data validation failed:", err.errors);
+        throw new Error(`Invalid data received from API: ${err.message}`);
+      }
       throw new Error(`Failed to fetch todos: ${err.message}`);
     });
 };

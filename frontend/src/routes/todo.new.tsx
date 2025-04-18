@@ -4,7 +4,7 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import { useQueryErrorResetBoundary } from "@tanstack/react-query";
-import { FormSchema, TodoNotFoundError, useCreate } from "@/todo";
+import { FormSchema, statusList, TodoNotFoundError, useCreate } from "@/todo";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,12 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import {
+  CalendarIcon,
+  CircleCheck,
+  CircleDashed,
+  CircleDot,
+} from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 
 export const Route = createFileRoute("/todo/new")({
@@ -78,7 +83,6 @@ export function TodoComponent() {
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
     mutation.mutate({ data });
-    console.log({ data });
   }
 
   return (
@@ -86,7 +90,6 @@ export function TodoComponent() {
       <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">
         New Todo
       </h2>
-
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -135,9 +138,23 @@ export function TodoComponent() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="complete">Complete</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="in progress">In Progress</SelectItem>
+                    {statusList.options.map((option) =>
+                      option === "pending" ? (
+                        <SelectItem value={option}>
+                          <CircleDot className="text-yellow-600" /> {option}
+                        </SelectItem>
+                      ) : option === "in-progress" ? (
+                        <SelectItem value={option}>
+                          <CircleDashed className="text-blue-600" /> {option}
+                        </SelectItem>
+                      ) : option === "complete" ? (
+                        <SelectItem value={option}>
+                          <CircleCheck className="text-green-600" /> {option}
+                        </SelectItem>
+                      ) : (
+                        <SelectItem value={option}>{option}</SelectItem>
+                      ),
+                    )}
                   </SelectContent>
                 </Select>
                 <FormMessage />
