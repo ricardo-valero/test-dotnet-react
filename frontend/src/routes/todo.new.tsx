@@ -4,7 +4,7 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import { useQueryErrorResetBoundary } from "@tanstack/react-query";
-import { create, FormSchema, TodoNotFoundError } from "@/todo";
+import { FormSchema, TodoNotFoundError, useCreate } from "@/todo";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Input } from "@/components/ui/input";
@@ -68,12 +68,16 @@ export function TodoErrorComponent({ error }: ErrorComponentProps) {
 }
 
 export function TodoComponent() {
+  const { queryClient } = Route.useRouteContext();
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
 
+  const mutation = useCreate(queryClient)();
+
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    create(data);
+    mutation.mutate({ data });
     console.log({ data });
   }
 

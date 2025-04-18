@@ -11,9 +11,9 @@ import {
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import {
-  remove,
   TodoNotFoundError,
   todosQueryOptions,
+  useRemove,
   type Todo,
 } from "@/todo";
 import { useEffect } from "react";
@@ -22,6 +22,7 @@ import { ArrowUpDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
+import { queryClient } from "@/main";
 
 export const Route = createFileRoute("/todo")({
   loader: ({ context: { queryClient } }) =>
@@ -99,12 +100,15 @@ export const columns: ColumnDef<Todo>[] = [
     enableHiding: false,
     cell: ({ row }) => {
       const todo = row.original;
+      const mutation = useRemove(queryClient)(todo.id);
       return (
         <div className="flex gap-2">
           <Link to="/todo/$id" params={{ id: todo.id }}>
             <Button>Edit</Button>
           </Link>
-          <Button onClick={() => remove(todo.id)}>Remove</Button>
+          <Button onClick={() => mutation.mutate({ id: todo.id })}>
+            Remove
+          </Button>
         </div>
       );
     },

@@ -1,6 +1,6 @@
 import axios from "redaxios";
 import { API_BASE_URL } from "./config";
-import { queryOptions } from "@tanstack/react-query";
+import { QueryClient, queryOptions, useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 
 export type Todo = { id: string } & z.TypeOf<typeof FormSchema>;
@@ -14,7 +14,7 @@ export const FormSchema = z.object({
 
 export class TodoNotFoundError extends Error {}
 
-export const single = async (id: string) => {
+const single = async (id: string) => {
   console.info(`Fetching todo with id ${id}...`);
   return axios
     .get<Todo>(`${API_BASE_URL}/todo/${id}`)
@@ -27,7 +27,7 @@ export const single = async (id: string) => {
     });
 };
 
-export const list = async () => {
+const list = async () => {
   console.info("Fetching todos...");
   return axios
     .get<Array<Todo>>(`${API_BASE_URL}/todo`)
@@ -37,17 +37,23 @@ export const list = async () => {
     });
 };
 
-export const create = async (todo: Partial<Todo>) => {
+const create = async ({ data }: { data: Partial<Todo> }) => {
   console.info(`Creating todo...`);
   return axios
-    .post<Todo>(`${API_BASE_URL}/todo`, todo)
+    .post<Todo>(`${API_BASE_URL}/todo`, data)
     .then((r) => r.data)
     .catch((err) => {
       throw new Error(`Failed to create todo: ${err.message}`);
     });
 };
 
-export const update = async (id: string, partial: Partial<Todo>) => {
+const update = async ({
+  id,
+  partial,
+}: {
+  id: string;
+  partial: Partial<Todo>;
+}) => {
   console.info(`Updating todo with id ${id}...`);
   return axios
     .put<Todo>(`${API_BASE_URL}/todo/${id}`, partial)
@@ -57,7 +63,7 @@ export const update = async (id: string, partial: Partial<Todo>) => {
     });
 };
 
-export const remove = async (id: string) => {
+const remove = async ({ id }: { id: string }) => {
   console.info(`Removing todo with id ${id}...`);
   return axios
     .delete<Todo>(`${API_BASE_URL}/todo/${id}`)
@@ -67,13 +73,34 @@ export const remove = async (id: string) => {
     });
 };
 
-export const todoQueryOptions = (todoId: string) =>
+export const todoQueryOptions = (id: string) =>
   queryOptions({
-    queryKey: ["todos", { todoId }],
-    queryFn: () => single(todoId),
+    queryKey: ["todo", { id }],
+    queryFn: () => single(id),
   });
 
 export const todosQueryOptions = queryOptions({
-  queryKey: ["todos"],
+  queryKey: ["todo"],
   queryFn: () => list(),
 });
+
+export const useCreate = (queryClient: QueryClient) => () =>
+  useMutation({
+    mutationKey: ["todo", "create"],
+    mutationFn: create,
+    onSuccess: () => queryClient.invalidateQueries(),
+  });
+
+export const useUpdate = (queryClient: QueryClient) => (id: string) =>
+  useMutation({
+    mutationKey: ["todo", "update", id],
+    mutationFn: update,
+    onSuccess: () => queryClient.invalidateQueries(),
+  });
+
+export const useRemove = (queryClient: QueryClient) => (id: string) =>
+  useMutation({
+    mutationKey: ["todo", "remove", id],
+    mutationFn: remove,
+    onSuccess: () => queryClient.invalidateQueries(),
+  });

@@ -12,7 +12,7 @@ import {
   FormSchema,
   TodoNotFoundError,
   todoQueryOptions,
-  update,
+  useUpdate,
 } from "@/todo";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect } from "react";
@@ -80,6 +80,7 @@ export function TodoErrorComponent({ error }: ErrorComponentProps) {
 
 export function TodoComponent() {
   const { id } = Route.useParams();
+  const { queryClient } = Route.useRouteContext();
   const { data } = useSuspenseQuery(todoQueryOptions(id));
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -91,9 +92,10 @@ export function TodoComponent() {
     form.reset(data);
   }, [data, form]);
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    update(id, data);
-    console.log({ data });
+  const mutation = useUpdate(queryClient)(id);
+
+  function onSubmit(partial: z.infer<typeof FormSchema>) {
+    mutation.mutate({ id, partial });
   }
 
   return (
@@ -102,6 +104,8 @@ export function TodoComponent() {
         Edit Todo
       </h2>
 
+      {JSON.stringify(mutation.error)}
+      {JSON.stringify(mutation.status)}
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
